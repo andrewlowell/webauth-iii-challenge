@@ -16,7 +16,8 @@ router.post('/register', (req, res) => {
 
   Users.add(user)
     .then(saved => {
-      res.status(201).json(saved);
+      const token = generateToken(saved);
+      res.status(201).json({ token });
     })
     .catch(error => {
       res.status(500).json(error);
@@ -53,25 +54,10 @@ router.get('/users', restricted, (req, res) => {
     .catch(err => res.send(err));
 });
 
-function withRole(role) {
-  return function(req, res, next) {
-    if (
-      req.decodedJwt &&
-      req.decodedJwt.roles &&
-      req.decodedJwt.roles.includes(role)
-    ) {
-      next();
-    } else {
-      res.status(403).json({ message: 'you have no power here' });
-    }
-  };
-}
-
 function generateToken(user) {
   const payload = {
     subject: user.id,
     username: user.username,
-    roles: ['student', 'ta'], // pretend they come from database user.roles
   };
   // removed the const secret from this line <<<<<<<<<<<<<<<<<<<<<<<
   const options = {
